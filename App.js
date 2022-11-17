@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Checkbox from 'expo-checkbox';
 
 import {
   Keyboard,
@@ -15,33 +16,27 @@ import {
   TouchableOpacity,
   FlatList,
   Button,
+  Icon
 } from "react-native";
 
 export default function App() {
 
   const local = 'pt-br';
 
-  // const [dadosTask, setDadosTask] = useState(estadoInicial)
+  const [task, setTask] = useState([]);
 
-  // const estadoInicial = {
-  //   name: '',
-  //   priority: -1,
-  // }
+  const estadoInicial = {
+    name: '',
+    priority: '',
+    // date: '',
+    done: false,
+  };
 
-  const [task, setTask] = useState([
+  const [newTask, setNewTask] = useState(estadoInicial);
 
-    // {
-    //   name: '',
-    //   priority: -1,
-    // }
-
-  ]);
-
-  // function resetForm() {
-  //   setTask(estadoInicial)
-  // }
-
-  const [newTask, setNewTask] = useState("");
+  function resetForm() {
+    setNewTask(estadoInicial)
+  }
 
   const [name, setName] = useState();
 
@@ -57,32 +52,49 @@ export default function App() {
 
   const [priority, setPriority] = useState();
 
-  async function addTask() {
-    const search = task.filter(task => task === newTask);
+  const [isChecked, setChecked] = useState(false);
 
+  function updateNewTask(prop, value) {
+    setNewTask(prevState => ({
+      ...prevState,
+      [prop]: value,
+    }))
+    // console.log(prop)
+    // console.log(value)
+  }
+
+  // ADIÇÃO DE TASK
+
+  async function addTask() {
+
+    // CONSULTA DE NOME NAS TASKS EXISTENTES
+    const search = task.filter(task => task.name === newTask.name);
+
+    // ALERT CASO ENCONTRE ALGUM
     if (search.length !== 0) {
       Alert.alert("Atenção", "Nome da tarefa repetida!");
       return;
     }
 
-    // setTask([...dadosTask, setDadosTask]);
-
-
+    // INCLUSÃO DE TASK AS EXISTENTES
     setTask([...task, newTask]);
 
-    setNewTask("");
-    setPriority("");
+    // LIMPEZA DE CAMPOS APÓS INCLUSÃO
+    resetForm();
 
+    // REMOVER TECLADO APÓS INCLUSÃO
     Keyboard.dismiss();
   }
 
+  // REMOÇÃO DE TASK
+
   async function removeTask(item) {
     Alert.alert(
-      "Deletar Task",
+      "Deletar Tarefa",
       "Tem certeza que deseja remover esta anotação?",
       [
         {
-          text: "Cancel",
+          text: "Cancelar",
           onPress: () => {
             return;
           },
@@ -112,7 +124,22 @@ export default function App() {
   };
 
   function pad(n) { return n < 10 ? "0" + n : n; }
-  var formatDate = pad(date.getDate()) + "/" + pad(date.getMonth() + 1) + "/" + date.getFullYear();
+
+  // var formatDate = pad(date.getDate()) + "/" + pad(date.getMonth() + 1) + "/" + date.getFullYear();
+
+  // MARCAR CONCLUSÃO DE TASK
+
+  async function taskDone(index) {
+
+    setTask([
+      ...task.slice(0, index),
+      { ...task[index], done: !task[index].done },
+      ...task.slice(index + 1)
+    ])
+
+    // setTask([...task, { ...task[index], done: !task[index].done }])
+
+  }
 
   useEffect(() => {
     async function carregaDados() {
@@ -132,6 +159,8 @@ export default function App() {
     salvaDados();
   }, [task]);
 
+  console.log(task)
+
   return (
     <>
       <KeyboardAvoidingView
@@ -144,14 +173,34 @@ export default function App() {
           <View style={styles.Body}>
             <FlatList
               data={task}
-              keyExtractor={item => item.toString()}
               showsVerticalScrollIndicator={false}
               style={styles.FlatList}
-              renderItem={({ item }) => (
+              renderItem={({ item, index }) => (
                 <View style={styles.ContainerView}>
 
-                  {/* {task.map(item => { item.name })} */}
-                  <Text style={styles.Texto}>{item}</Text>
+                  {/* {!task?.done && (
+                    <TouchableOpacity onPress={() => markTodoComplete(task.id)}>
+                      <View style={[styles.actionIcon, { backgroundColor: 'green' }]}>
+                        <Icon name="done" size={20} color="white" />
+                      </View>
+                    </TouchableOpacity>
+                  )} */}
+
+                  {/* <Checkbox
+                    style={styles.Texto}
+                    value={newTask.done}
+                    onValueChange={setChecked}
+                  /> */}
+
+                  <Checkbox
+                    style={styles.Texto}
+                    value={item.done}
+                    onValueChange={() => taskDone(index)}
+                  />
+
+                  <Text style={styles.Texto}> {item.name} </Text>
+                  <Text style={styles.Texto}> {item.priority} </Text>
+                  <Text style={styles.Texto}> {item.date} </Text>
 
                   <TouchableOpacity onPress={() => removeTask(item)}>
                     <MaterialIcons
@@ -170,10 +219,10 @@ export default function App() {
               name="name"
               style={styles.Input}
               autoCorrect={true}
-              value={newTask}
               placeholder="Título"
+              value={newTask.name}
               maxLength={25}
-              onChangeText={text => setNewTask(text)}
+              onChangeText={(text) => updateNewTask("name", text)}
             />
 
             <TextInput
@@ -181,21 +230,20 @@ export default function App() {
               placeholder="Prioridade"
               style={styles.InputPrioridade}
               autoFocus={true}
-              onChangeText={(text) => setPriority(text)}
-              value={priority}
+              value={newTask.priority}
               keyboardType='numeric'
               maxLength={1}
-              range
+              onChangeText={(text) => updateNewTask("priority", text)}
             />
 
-            {datePicker && (
+            {/* {datePicker && (
               <DateTimePicker
                 name="date"
-                value={date}
+                value={newTask.date}
                 mode={'date'}
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 is24Hour={true}
-                onChange={onDateSelected}
+                onChange={updateNewTask}
               />
             )}
 
@@ -203,7 +251,7 @@ export default function App() {
               <View style={{ marginLeft: 10, width: 130, marginTop: 2, }}>
                 <Button title="Escolher Data" style={styles.button} onPress={showDatePicker} />
               </View>
-            )}
+            )} */}
 
             <TouchableOpacity style={styles.Button} onPress={() => addTask()}>
               <Ionicons name="ios-add" size={20} color="white" />
