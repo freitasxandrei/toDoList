@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Checkbox from 'expo-checkbox';
+import Moment from 'moment';
 
 import {
   Keyboard,
@@ -14,21 +16,23 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  FlatList,
-  Button,
-  Icon
+  FlatList
 } from "react-native";
+
+import moment from "moment";
 
 export default function App() {
 
   const local = 'pt-br';
+
+  Moment.locale('pt-br');
 
   const [task, setTask] = useState([]);
 
   const estadoInicial = {
     name: '',
     priority: '',
-    // date: '',
+    date: new Date(),
     done: false,
   };
 
@@ -38,33 +42,29 @@ export default function App() {
     setNewTask(estadoInicial)
   }
 
-  const [name, setName] = useState();
+  // const [date, setDate] = useState(new Date(1598051730000));
 
-  const [datePicker, setDatePicker] = useState(false);
+  const [show, setShow] = useState(false);
 
-  const [date, setDate] = useState(new Date());
+  // const dateCaptured = (event, selectDate) => {
+  //   setDate(selectDate);
+  //   setShow(false)
+  // }
 
-  const [dates, setDates] = useState(new Date());
+  const showDatePicker = () => {
+    setShow(true)
+  };
 
-  const [timePicker, setTimePicker] = useState(false);
-
-  const [time, setTime] = useState(new Date(Date.now()));
-
-  const [priority, setPriority] = useState();
-
-  const [isChecked, setChecked] = useState(false);
-
+  // ATUALIZAÇÃO DOS DADOS
   function updateNewTask(prop, value) {
     setNewTask(prevState => ({
       ...prevState,
       [prop]: value,
     }))
-    // console.log(prop)
-    // console.log(value)
+
   }
 
   // ADIÇÃO DE TASK
-
   async function addTask() {
 
     // CONSULTA DE NOME NAS TASKS EXISTENTES
@@ -87,7 +87,6 @@ export default function App() {
   }
 
   // REMOÇÃO DE TASK
-
   async function removeTask(item) {
     Alert.alert(
       "Deletar Tarefa",
@@ -109,26 +108,7 @@ export default function App() {
     );
   }
 
-  function showDatePicker() {
-    setDatePicker(true);
-  };
-
-  function onDateSelected(event, value) {
-    setDate(value);
-    setDatePicker(false);
-  };
-
-  function onTimeSelected(event, value) {
-    setTime(value);
-    setTimePicker(false);
-  };
-
-  function pad(n) { return n < 10 ? "0" + n : n; }
-
-  // var formatDate = pad(date.getDate()) + "/" + pad(date.getMonth() + 1) + "/" + date.getFullYear();
-
   // MARCAR CONCLUSÃO DE TASK
-
   async function taskDone(index) {
 
     setTask([
@@ -137,10 +117,61 @@ export default function App() {
       ...task.slice(index + 1)
     ])
 
-    // setTask([...task, { ...task[index], done: !task[index].done }])
+  }
+
+  function dateUpdated(event, selectDate) {
+
+    setNewTask(prevState => ({
+      ...prevState,
+      date: selectDate,
+    }))
 
   }
 
+  const dateNow = moment();
+
+  console.log(dateNow)
+
+  // MUDANÇA DE BACKGROUND DE ACORDO COM O STATUS DA TAREFA
+
+  function getStyle(value) {
+
+    const dateMemory = moment(value);
+    const dateNow = moment();
+
+    console.log(dateMemory)
+    console.log(dateNow)
+
+    if (dateMemory < dateNow) {
+
+      return {
+        marginBottom: 15,
+        padding: 15,
+        borderRadius: 4,
+        backgroundColor: "#eee",
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        borderWidth: 1,
+        borderColor: "#eee"
+      }
+    } else {
+      return {
+        marginBottom: 15,
+        padding: 15,
+        borderRadius: 4,
+        backgroundColor: "#eee",
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        borderWidth: 1,
+        borderColor: "red"
+      }
+    }
+  }
+
+
+  // CARREGAMENTO DOS DADOS DO ARRAY TASK DO ASYNC
   useEffect(() => {
     async function carregaDados() {
       const task = await AsyncStorage.getItem("task");
@@ -152,14 +183,13 @@ export default function App() {
     carregaDados();
   }, []);
 
+  // SALVANDO OS DADOS DO ARRAY TASK NO ASYNC
   useEffect(() => {
     async function salvaDados() {
       AsyncStorage.setItem("task", JSON.stringify(task));
     }
     salvaDados();
   }, [task]);
-
-  console.log(task)
 
   return (
     <>
@@ -176,21 +206,10 @@ export default function App() {
               showsVerticalScrollIndicator={false}
               style={styles.FlatList}
               renderItem={({ item, index }) => (
-                <View style={styles.ContainerView}>
-
-                  {/* {!task?.done && (
-                    <TouchableOpacity onPress={() => markTodoComplete(task.id)}>
-                      <View style={[styles.actionIcon, { backgroundColor: 'green' }]}>
-                        <Icon name="done" size={20} color="white" />
-                      </View>
-                    </TouchableOpacity>
-                  )} */}
-
-                  {/* <Checkbox
-                    style={styles.Texto}
-                    value={newTask.done}
-                    onValueChange={setChecked}
-                  /> */}
+                <View
+                  // style={() => getStyle(item.date)}
+                  style={styles.ContainerView}
+                >
 
                   <Checkbox
                     style={styles.Texto}
@@ -200,7 +219,7 @@ export default function App() {
 
                   <Text style={styles.Texto}> {item.name} </Text>
                   <Text style={styles.Texto}> {item.priority} </Text>
-                  <Text style={styles.Texto}> {item.date} </Text>
+                  <Text style={styles.Texto}> {Moment(item.date).format('DD/MM/yyyy')} </Text>
 
                   <TouchableOpacity onPress={() => removeTask(item)}>
                     <MaterialIcons
@@ -219,7 +238,7 @@ export default function App() {
               name="name"
               style={styles.Input}
               autoCorrect={true}
-              placeholder="Título"
+              placeholder="TÍTULO"
               value={newTask.name}
               maxLength={25}
               onChangeText={(text) => updateNewTask("name", text)}
@@ -227,7 +246,7 @@ export default function App() {
 
             <TextInput
               name="priority"
-              placeholder="Prioridade"
+              placeholder="PRIORIDADE"
               style={styles.InputPrioridade}
               autoFocus={true}
               value={newTask.priority}
@@ -236,22 +255,29 @@ export default function App() {
               onChangeText={(text) => updateNewTask("priority", text)}
             />
 
-            {/* {datePicker && (
+            <TouchableOpacity
+              style={styles.pickDate}
+              onPress={() => showDatePicker()}
+              width={1000}
+              title="Vencimento"
+            >
+              <AntDesign
+                name="calendar"
+                size={20}
+                color="white"
+              />
+            </TouchableOpacity>
+
+            {show && (
               <DateTimePicker
                 name="date"
                 value={newTask.date}
                 mode={'date'}
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 is24Hour={true}
-                onChange={updateNewTask}
+                display='default'
+                onChange={dateUpdated}
               />
             )}
-
-            {!datePicker && (
-              <View style={{ marginLeft: 10, width: 130, marginTop: 2, }}>
-                <Button title="Escolher Data" style={styles.button} onPress={showDatePicker} />
-              </View>
-            )} */}
 
             <TouchableOpacity style={styles.Button} onPress={() => addTask()}>
               <Ionicons name="ios-add" size={20} color="white" />
@@ -282,7 +308,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingTop: 13,
     borderTopWidth: 1,
-    borderColor: "#eee"
+    borderColor: "#eee",
   },
   Input: {
     flex: 1,
@@ -310,7 +336,7 @@ const styles = StyleSheet.create({
     width: 40,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#1c6cce",
+    backgroundColor: "green",
     borderRadius: 4,
     marginLeft: 10
   },
@@ -330,11 +356,19 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 4,
     backgroundColor: "#eee",
-
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     borderWidth: 1,
     borderColor: "#eee"
+  },
+  pickDate: {
+    height: 40,
+    width: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1c6cce",
+    borderRadius: 4,
+    marginLeft: 10
   }
 });
