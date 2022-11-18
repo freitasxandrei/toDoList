@@ -125,22 +125,57 @@ export default function App() {
       ...prevState,
       date: selectDate,
     }))
-
+    setShow(false)
   }
 
   const dateNow = moment();
 
-  console.log(dateNow)
-
   // MUDANÇA DE BACKGROUND DE ACORDO COM O STATUS DA TAREFA
+
+  function getStylePriority(value) {
+
+    if (value == 1) {
+
+      return {
+        fontSize: 14,
+        color: "red",
+        fontWeight: "bold",
+        marginTop: 4,
+        textAlign: "center"
+      }
+    } else if (value == 2) {
+      return {
+        fontSize: 14,
+        color: "orange",
+        fontWeight: "bold",
+        marginTop: 4,
+        textAlign: "center"
+      }
+    } else if (value == 3) {
+      return {
+        fontSize: 14,
+        color: "blue",
+        fontWeight: "bold",
+        marginTop: 4,
+        textAlign: "center"
+      }
+    } else if (value > 3) {
+      return {
+        fontSize: 14,
+        color: "green",
+        fontWeight: "bold",
+        marginTop: 4,
+        textAlign: "center"
+      }
+    }
+  }
+
+  // MUDANÇA DE BORDA DE ACORDO COM O STATUS DA TAREFA
 
   function getStyle(value) {
 
     const dateMemory = moment(value);
     const dateNow = moment();
-
-    console.log(dateMemory)
-    console.log(dateNow)
 
     if (dateMemory < dateNow) {
 
@@ -187,6 +222,7 @@ export default function App() {
   useEffect(() => {
     async function salvaDados() {
       AsyncStorage.setItem("task", JSON.stringify(task));
+      setShow(false)
     }
     salvaDados();
   }, [task]);
@@ -207,27 +243,38 @@ export default function App() {
               style={styles.FlatList}
               renderItem={({ item, index }) => (
                 <View
-                  // style={() => getStyle(item.date)}
-                  style={styles.ContainerView}
+                  style={getStyle(item.date)}
                 >
 
-                  <Checkbox
-                    style={styles.Texto}
-                    value={item.done}
-                    onValueChange={() => taskDone(index)}
-                  />
-
-                  <Text style={styles.Texto}> {item.name} </Text>
-                  <Text style={styles.Texto}> {item.priority} </Text>
-                  <Text style={styles.Texto}> {Moment(item.date).format('DD/MM/yyyy')} </Text>
-
-                  <TouchableOpacity onPress={() => removeTask(item)}>
-                    <MaterialIcons
-                      name="delete-forever"
-                      size={25}
-                      color="#f64c75"
+                  <View style={styles.itemRenderClick}>
+                    <Checkbox
+                      style={styles.Texto}
+                      value={item.done}
+                      onValueChange={() => taskDone(index)}
                     />
-                  </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.itemRender}>
+                    <Text style={styles.Texto}> {item.name} </Text>
+                  </View>
+
+                  <View style={styles.itemRenderPriority}>
+                    <Text style={getStylePriority(item.priority)}> {item.priority} </Text>
+                  </View>
+
+                  <View style={styles.itemRender}>
+                    <Text style={styles.Texto}> {Moment(item.date).format('DD/MM/yyyy')} </Text>
+                  </View>
+
+                  <View style={styles.itemRenderClick}>
+                    <TouchableOpacity onPress={() => removeTask(item)}>
+                      <MaterialIcons
+                        name="delete-forever"
+                        size={25}
+                        color="#f64c75"
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
             />
@@ -279,8 +326,14 @@ export default function App() {
               />
             )}
 
-            <TouchableOpacity style={styles.Button} onPress={() => addTask()}>
-              <Ionicons name="ios-add" size={20} color="white" />
+            <TouchableOpacity
+              style={styles.Button}
+              onPress={() => addTask()}>
+              <Ionicons
+                name="ios-add"
+                size={20}
+                color="white"
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -370,5 +423,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#1c6cce",
     borderRadius: 4,
     marginLeft: 10
+  },
+  itemRender: {
+    width: 117,
+  },
+  itemRenderClick: {
+    width: 40,
+  },
+  itemRenderPriority: {
+    width: 40,
   }
 });
