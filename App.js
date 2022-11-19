@@ -174,11 +174,10 @@ export default function App() {
 
   function getStyle(value) {
 
-    const dateMemory = moment(value);
-    const dateNow = moment();
+    const dateMemory = moment(value).format('YYYY-MM-DD');
+    const dateNow = moment().format('YYYY-MM-DD');
 
     if (dateMemory < dateNow) {
-
       return {
         marginBottom: 15,
         padding: 15,
@@ -190,7 +189,7 @@ export default function App() {
         borderWidth: 1,
         borderColor: "red"
       }
-    } else {
+    } else if (dateMemory >= dateNow) {
       return {
         marginBottom: 15,
         padding: 15,
@@ -204,7 +203,6 @@ export default function App() {
       }
     }
   }
-
 
   // CARREGAMENTO DOS DADOS DO ARRAY TASK DO ASYNC
   useEffect(() => {
@@ -263,7 +261,7 @@ export default function App() {
                   </View>
 
                   <View style={styles.itemRender}>
-                    <Text style={styles.Texto}> {Moment(item.date).format('DD/MM/yyyy')} </Text>
+                    <Text style={styles.Texto}> {Moment(item.date).format('DD-MM-YYYY')} </Text>
                   </View>
 
                   <View style={styles.itemRenderClick}>
