@@ -188,7 +188,7 @@ export default function App() {
         flexDirection: "row",
         justifyContent: "space-between",
         borderWidth: 1,
-        borderColor: "#eee"
+        borderColor: "red"
       }
     } else {
       return {
@@ -200,7 +200,7 @@ export default function App() {
         flexDirection: "row",
         justifyContent: "space-between",
         borderWidth: 1,
-        borderColor: "red"
+        borderColor: "#eee"
       }
     }
   }
