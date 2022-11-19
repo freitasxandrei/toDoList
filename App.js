@@ -261,7 +261,7 @@ export default function App() {
                   </View>
 
                   <View style={styles.itemRender}>
-                    <Text style={styles.Texto}> {Moment(item.date).format('DD-MM-YYYY')} </Text>
+                    <Text style={styles.Texto}> {Moment(item.date).format('DD/MM/YYYY')} </Text>
                   </View>
 
                   <View style={styles.itemRenderClick}>
